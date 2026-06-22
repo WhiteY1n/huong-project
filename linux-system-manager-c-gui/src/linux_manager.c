@@ -47,7 +47,7 @@ static void init_project_dir(const char *argv0) {
 }
 
 static void write_log(const char *fmt, ...) {
-    char path[PATH_MAX];
+    char path[PATH_MAX + 256];
     snprintf(path, sizeof(path), "%s/logs/linux_manager.log", PROJECT_DIR);
 
     FILE *f = fopen(path, "a");
@@ -157,7 +157,7 @@ static int process_search(const char *keyword) {
     char cmd[PATH_MAX * 3];
 
     shell_quote(keyword, qkeyword, sizeof(qkeyword));
-    snprintf(cmd, sizeof(cmd), "ps aux | grep -i -- %s | grep -v grep", qkeyword);
+    snprintf(cmd, sizeof(cmd), "ps -eo pid,ppid,user,stat,%%cpu,%%mem,cmd | head -n 1; ps -eo pid,ppid,user,stat,%%cpu,%%mem,cmd | grep -i -- %s | grep -v grep", qkeyword);
 
     write_log("Tìm tiến trình theo từ khóa: %s", keyword);
     return run_cmd(cmd);
@@ -187,6 +187,21 @@ static int process_kill(const char *pid_str) {
         printf("Đã gửi SIGTERM tới tiến trình PID %ld.\n", pid);
         write_log("Kill tiến trình PID=%ld", pid);
         return 0;
+    }
+
+    if (errno == EPERM) {
+        printf("Permission denied. Đang thử dùng quyền root (pkexec)...\n");
+        char cmd[256];
+        snprintf(cmd, sizeof(cmd), "pkexec kill -9 %ld", pid);
+        int rc = system(cmd);
+        if (rc == 0) {
+            printf("Đã gửi SIGKILL (qua pkexec) tới tiến trình PID %ld.\n", pid);
+            write_log("Kill tiến trình PID=%ld (pkexec)", pid);
+            return 0;
+        } else {
+            printf("Kill bằng pkexec thất bại hoặc bị hủy.\n");
+            return 1;
+        }
     }
 
     printf("Kill thất bại: %s\n", strerror(errno));

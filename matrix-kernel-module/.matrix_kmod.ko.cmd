@@ -1,0 +1,1 @@
+savedcmd_matrix_kmod.ko := ld -r -m elf_x86_64 -z noexecstack --no-warn-rwx-segments --build-id=sha1  -T /usr/src/linux-headers-7.0.0-22-generic/scripts/module.lds -o matrix_kmod.ko matrix_kmod.o matrix_kmod.mod.o .module-common.o
