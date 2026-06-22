@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+logs/*.log
+backup/*.tar.gz
+backup/*.zip
+test/cron_test.txt
+*.tmp
+*.swp
+.DS_Store

@@ -1,0 +1,1 @@
+Đây là file mẫu để test chức năng quản lý file.
